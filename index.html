@@ -83,6 +83,8 @@ footer{max-width:1280px;margin:0 auto;padding:0 20px 30px;color:var(--mute);font
   #mbar .go{font-size:12px;color:#b9c8d8}
   body{padding-bottom:80px}
 }
+.gout{margin-top:8px;padding:8px 10px;border-radius:7px;font-size:13px;background:#f1f4f8;border:1px solid var(--line)}
+.gout b.g1{color:#8f1d14}.gout b.g2{color:#2f6b1d}
 </style>
 </head>
 <body>
@@ -109,22 +111,23 @@ footer{max-width:1280px;margin:0 auto;padding:0 20px 30px;color:var(--mute);font
   <!-- Fluid & data -->
   <div class="card" id="cardFluid">
     <h2>2 · Fluido</h2>
-    <div class="step" id="stState">
-      <label>Stato del fluido</label>
-      <div class="seg" id="state">
-        <button data-v="gas" class="on">Gas / vapore<small>o liquido con Pv &gt; 0,5 bar a TS</small></button>
-        <button data-v="liq">Liquido<small>Pv ≤ 0,5 bar a TS</small></button>
-      </div>
-      <div class="hint">Pv = tensione di vapore alla temperatura massima ammissibile TS, rispetto alla pressione atmosferica (1013 mbar).</div>
-    </div>
     <div class="step">
-      <label>Gruppo del fluido (art. 13)</label>
-      <div class="seg" id="group">
-        <button data-v="1" class="on">Gruppo 1<small>pericolosi</small></button>
-        <button data-v="2">Gruppo 2<small>tutti gli altri</small></button>
+      <label for="fluid">Fluido contenuto</label>
+      <select id="fluid"></select>
+      <div class="field hidden" id="tsWrap" style="margin-top:8px">
+        <label for="ts">TS – temperatura massima ammissibile (°C)</label>
+        <input type="number" id="ts" value="50" step="any">
+      </div>
+      <div id="gOut" class="gout"></div>
+      <div id="manualGroup" class="hidden" style="margin-top:8px">
+        <span class="lbl">Gruppo del fluido (art. 13)</span>
+        <div class="seg" id="group">
+          <button data-v="1" class="on">Gruppo 1<small>pericolosi</small></button>
+          <button data-v="2">Gruppo 2<small>tutti gli altri</small></button>
+        </div>
       </div>
       <details>
-        <summary>Quali fluidi sono del Gruppo 1? (Reg. CE 1272/2008 – CLP)</summary>
+        <summary>Criteri del Gruppo 1 (Reg. CE 1272/2008 – CLP)</summary>
         <ul>
           <li>Esplosivi instabili o divisioni 1.1–1.5</li>
           <li>Gas infiammabili cat. 1 e 2; gas comburenti cat. 1</li>
@@ -138,8 +141,16 @@ footer{max-width:1280px;margin:0 auto;padding:0 20px 30px;color:var(--mute);font
           <li>STOT esposizione singola cat. 1</li>
           <li><b>Inoltre:</b> qualsiasi fluido con TS superiore al suo punto di infiammabilità</li>
         </ul>
-        <div class="hint">Recipiente a più scomparti: si classifica con lo scomparto di categoria più alta; scomparto con più fluidi: si usa il fluido più severo (art. 13.2).</div>
+        <div class="hint">La classificazione dei fluidi in elenco si basa sulla classificazione CLP tipica della sostanza pura. Per miscele o concentrazioni diverse verificare la scheda di sicurezza (SDS, sezione 2) e usare "Altro fluido". Recipiente a più scomparti o con più fluidi: vale il caso più severo (art. 13.2).</div>
       </details>
+    </div>
+    <div class="step" id="stState">
+      <label>Stato del fluido alla TS</label>
+      <div class="seg" id="state">
+        <button data-v="gas" class="on">Gas / vapore<small>o liquido con Pv &gt; 0,5 bar a TS</small></button>
+        <button data-v="liq">Liquido<small>Pv ≤ 0,5 bar a TS</small></button>
+      </div>
+      <div class="hint" id="stateHint">Pv = tensione di vapore alla temperatura massima ammissibile TS, rispetto alla pressione atmosferica (1013 mbar).</div>
     </div>
   </div>
 
@@ -333,6 +344,104 @@ function seg(id,key){
   }));
 }
 seg('type','type');seg('state','state');seg('group','group');seg('pmode','pmode');
+
+/* ============ Fluids ============
+ g: 1 | 2 | 'fp' (gruppo dipende da TS vs punto di infiammabilità)
+ st: stato tipico 'gas' | 'liq' ; fp: punto di infiammabilità °C ; un: gas instabile */
+const FLUIDS=[
+ ['Gas e vapori – Gruppo 2',[
+  ['aria','Aria compressa',2,'gas','non pericolosa'],
+  ['n2','Azoto (N₂)',2,'gas','gas inerte'],
+  ['ar','Argon',2,'gas','gas inerte'],
+  ['he','Elio',2,'gas','gas inerte'],
+  ['co2','Anidride carbonica (CO₂ / R744)',2,'gas','gas non infiammabile'],
+  ['vap','Vapore acqueo',2,'gas','non pericoloso'],
+  ['sf6','Esafluoruro di zolfo (SF₆)',2,'gas','gas non infiammabile'],
+  ['r134a','R134a',2,'gas','refrigerante non infiammabile (A1)'],
+  ['r410a','R410A',2,'gas','refrigerante non infiammabile (A1)'],
+  ['r407c','R407C',2,'gas','refrigerante non infiammabile (A1)'],
+  ['r404a','R404A',2,'gas','refrigerante non infiammabile (A1)'],
+ ]],
+ ['Gas e vapori – Gruppo 1',[
+  ['h2','Idrogeno (H₂)',1,'gas','gas infiammabile cat. 1'],
+  ['ch4','Metano / gas naturale',1,'gas','gas infiammabile cat. 1'],
+  ['biogas','Biogas',1,'gas','gas infiammabile cat. 1'],
+  ['c3h8','Propano (R290)',1,'gas','gas infiammabile cat. 1'],
+  ['c4h10','Butano / isobutano (R600a)',1,'gas','gas infiammabile cat. 1'],
+  ['gpl','GPL',1,'gas','gas infiammabile cat. 1'],
+  ['c2h4','Etilene',1,'gas','gas infiammabile cat. 1'],
+  ['c3h6','Propilene',1,'gas','gas infiammabile cat. 1'],
+  ['c2h2','Acetilene',1,'gas','gas infiammabile cat. 1 – gas chimicamente instabile',true],
+  ['eo','Ossido di etilene',1,'gas','gas infiammabile cat. 1, tossicità acuta – gas chimicamente instabile',true],
+  ['dme','Dimetiletere',1,'gas','gas infiammabile cat. 1'],
+  ['vcm','Cloruro di vinile',1,'gas','gas infiammabile cat. 1'],
+  ['r32','R32',1,'gas','refrigerante infiammabile (gas infiammabile cat. 1)'],
+  ['r1234yf','R1234yf',1,'gas','refrigerante infiammabile (gas infiammabile cat. 1)'],
+  ['nh3','Ammoniaca anidra (R717)',1,'gas','gas infiammabile cat. 2, tossicità acuta per inalazione cat. 3'],
+  ['o2','Ossigeno',1,'gas','gas comburente cat. 1'],
+  ['n2o','Protossido di azoto',1,'gas','gas comburente cat. 1'],
+  ['cl2','Cloro',1,'gas','gas comburente cat. 1, tossicità acuta per inalazione cat. 3'],
+  ['co','Monossido di carbonio',1,'gas','gas infiammabile cat. 1, tossicità acuta per inalazione cat. 3'],
+  ['h2s','Idrogeno solforato',1,'gas','gas infiammabile cat. 1, tossicità acuta per inalazione cat. 2'],
+  ['so2','Anidride solforosa',1,'gas','tossicità acuta per inalazione cat. 3'],
+  ['hcl_g','Acido cloridrico anidro (gas)',1,'gas','tossicità acuta per inalazione cat. 3'],
+ ]],
+ ['Liquidi – Gruppo 2',[
+  ['h2o','Acqua',2,'liq','non pericolosa'],
+  ['glyw','Acqua glicolata (miscela antigelo acquosa)',2,'liq','non pericolosa ai fini PED'],
+  ['h2so4','Acido solforico',2,'liq','corrosivo (non rientra nei criteri del gruppo 1)'],
+  ['hcl','Acido cloridrico in soluzione',2,'liq','corrosivo (non rientra nei criteri del gruppo 1)'],
+  ['naoh','Idrossido di sodio in soluzione',2,'liq','corrosivo (non rientra nei criteri del gruppo 1)'],
+  ['nh4oh','Ammoniaca in soluzione (≤ 25%)',2,'liq','corrosivo (non rientra nei criteri del gruppo 1)'],
+ ]],
+ ['Liquidi – Gruppo 1',[
+  ['benz','Benzina',1,'liq','liquido infiammabile cat. 1'],
+  ['meoh','Metanolo',1,'liq','liquido infiammabile cat. 2, tossicità acuta cat. 3'],
+  ['etoh','Etanolo',1,'liq','liquido infiammabile cat. 2'],
+  ['acet','Acetone',1,'liq','liquido infiammabile cat. 2'],
+  ['tol','Toluene',1,'liq','liquido infiammabile cat. 2'],
+  ['ipa','Alcol isopropilico',1,'liq','liquido infiammabile cat. 2'],
+  ['hno3','Acido nitrico (≥ 65%)',1,'liq','liquido comburente cat. 3'],
+  ['h2o2','Perossido di idrogeno (≥ 50%)',1,'liq','liquido comburente'],
+ ]],
+ ['Liquidi combustibili – gruppo secondo TS e punto di infiammabilità',[
+  ['xil','Xilene',  'fp','liq','liquido infiammabile cat. 3',25],
+  ['kero','Kerosene / Jet A-1','fp','liq','liquido infiammabile cat. 3',38],
+  ['dies','Gasolio / diesel','fp','liq','liquido infiammabile cat. 3',55],
+  ['eg','Glicole etilenico (puro)','fp','liq','combustibile',111],
+  ['pg','Glicole propilenico (puro)','fp','liq','combustibile',99],
+  ['oilh','Olio idraulico minerale','fp','liq','combustibile',180],
+  ['oill','Olio lubrificante minerale','fp','liq','combustibile',200],
+  ['oilt','Olio diatermico minerale','fp','liq','combustibile',210],
+ ]],
+ ['Altro',[
+  ['other','Altro fluido (scelta manuale del gruppo)','m','gas','']
+ ]],
+];
+const FL={};
+(function(){const sel=$('fluid');let h='';
+ FLUIDS.forEach(([grp,arr])=>{h+=`<optgroup label="${grp}">`;arr.forEach(f=>{FL[f[0]]={id:f[0],name:f[1],g:f[2],st:f[3],why:f[4],fp:(f[2]==='fp'?f[5]:null),un:(f[5]===true)};h+=`<option value="${f[0]}">${f[1]}</option>`;});h+='</optgroup>';});
+ sel.innerHTML=h; sel.value='aria';})();
+function setSeg(id,v){$(id).querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));}
+function onFluidChange(){
+  const f=FL[$('fluid').value];
+  if(f.g!=='m'){S.state=f.st;setSeg('state',f.st);} else setSeg('group',S.group);
+  $('unstable').checked=!!f.un;
+  if(f.id==='h2o'||f.fp!==null) $('ts').value=$('ts').value||50;
+  update();
+}
+$('fluid').addEventListener('change',onFluidChange);
+$('ts').addEventListener('input',()=>{const f=FL[$('fluid').value];
+  if(f.id==='h2o'){const st=(+$('ts').value>111.6)?'gas':'liq';S.state=st;setSeg('state',st);} update();});
+function resolveGroup(){
+  const f=FL[$('fluid').value]; const ts=+$('ts').value;
+  let g,why;
+  if(f.g==='m'){g=S.group;why='scelta manuale';}
+  else if(f.g==='fp'){ if(ts>f.fp){g='1';why=`${f.why}: TS = ${fmt(ts)} °C > punto di infiammabilità ≈ ${f.fp} °C`;} else {g='2';why=`${f.why}: TS = ${fmt(ts)} °C ≤ punto di infiammabilità ≈ ${f.fp} °C`;} }
+  else {g=String(f.g);why=f.why;}
+  return {f,g,why};
+}
+
 ['ps','v','dn','unstable','ext','t350','cooker','hotw','specific','prot'].forEach(id=>$(id).addEventListener('input',update));
 $('specific').addEventListener('change',update);
 
@@ -363,6 +472,15 @@ function applyExceptions(t,c,notes){
 let chartSpec=null;
 function update(){
   const ty=S.type;
+  { const r=resolveGroup(); S.group=r.g; window.__fl=r;
+    const showTs = r.f.g==='fp' || r.f.id==='h2o';
+    $('tsWrap').classList.toggle('hidden',!showTs);
+    $('manualGroup').classList.toggle('hidden',r.f.g!=='m');
+    $('gOut').innerHTML = r.f.g==='m' ? 'Seleziona il gruppo in base alla scheda di sicurezza (SDS) del fluido.' :
+      `<b class="g${r.g}">Gruppo ${r.g}</b> – ${r.why}`;
+    $('stateHint').textContent = (r.f.id==='h2o') ? "Acqua: con TS > 111,6 °C la tensione di vapore supera 0,5 bar rispetto all'atmosfera, quindi si classifica come gas/vapore (impostato in automatico dalla TS)." :
+      (r.f.g!=='m' ? "Stato proposto in automatico in base al fluido; modificalo se a TS la tensione di vapore è diversa (Pv > 0,5 bar → gas/vapore)." : "Pv = tensione di vapore alla temperatura massima ammissibile TS, rispetto alla pressione atmosferica (1013 mbar).");
+  }
   const ps=+$('ps').value||0, v=+$('v').value||0, dn=+$('dn').value||0;
   const isEq=['vessel','fired','piping','pressacc'].includes(ty);
   $('cardFluid').classList.toggle('hidden',!isEq||ty==='fired');
@@ -451,7 +569,7 @@ function update(){
   // summary
   const typeName={vessel:'Recipiente',fired:'Attrezzatura a focolare/riscaldata',piping:'Tubazione',safety:'Accessorio di sicurezza',pressacc:'Accessorio a pressione',assembly:'Insieme'}[ty];
   let sum=`PED 2014/68/UE – classificazione\nTipo: ${typeName}\n`;
-  if(isEq){ if(ty!=='fired') sum+=`Stato fluido: ${S.state==='gas'?'gas/vapore (Pv > 0,5 bar)':'liquido (Pv ≤ 0,5 bar)'}\nGruppo fluido: ${S.group}\n`; sum+=`${calc}\n`; }
+  if(isEq){ if(ty!=='fired') sum+=`Fluido: ${window.__fl.f.name}${(window.__fl.f.g==='fp'||window.__fl.f.id==='h2o')?' (TS = '+fmt(+$('ts').value)+' °C)':''}\nStato fluido: ${S.state==='gas'?'gas/vapore (Pv > 0,5 bar)':'liquido (Pv ≤ 0,5 bar)'}\nGruppo fluido: ${S.group} (${window.__fl.why})\n`; sum+=`${calc}\n`; }
   sum+=`Riferimento: ${ref}\nRisultato: ${cat<0?'fuori PED':cat===0?'Art. 4.3 (SEP)':'Categoria '+ROM[cat]}\n`;
   if(cat>=1) sum+=`Moduli ammessi: ${CATMODS[cat].map(modLabel).join('; ')}\n`;
   if(notes.length) sum+='Note:\n'+notes.map(n=>'- '+n[0]).join('\n');
@@ -544,7 +662,7 @@ $('copyBtn').addEventListener('click',async()=>{
   try{await navigator.clipboard.writeText(txt);$('copyMsg').textContent='Riepilogo copiato.';$('summaryBox').classList.add('hidden');}
   catch(e){$('summaryBox').classList.remove('hidden');$('copyMsg').textContent='Copia non disponibile: seleziona il testo qui sotto.';}
 });
-update();
+onFluidChange();
 </script>
 <script>if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}</script>
 </body>
