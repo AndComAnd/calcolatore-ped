@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0f2a47">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Calcolatore PED">
+<title>PED 2014/68/UE – Calcolatore categoria e moduli</title>
+<style>
+:root{
+  --bg:#f4f6f9;--card:#fff;--ink:#14202e;--mute:#5d6b7a;--line:#dde3ea;--accent:#0b5cad;--accent-weak:#e6f0fa;
+  --c-out:#eceff3;--c-sep:#d9eef0;--c1:#cfe8c4;--c2:#fbe6a6;--c3:#f8c08c;--c4:#ee8f86;
+  --c1i:#2f6b1d;--c2i:#7a5b00;--c3i:#8a4206;--c4i:#8f1d14;--csepi:#16626b;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.45}
+header{background:#0f2a47;color:#fff;padding:18px 24px}
+header h1{margin:0;font-size:20px;font-weight:600}
+header p{margin:4px 0 0;color:#b9c8d8;font-size:13px}
+main{max-width:1280px;margin:0 auto;padding:20px;display:grid;grid-template-columns:420px 1fr;gap:20px}
+@media(max-width:960px){main{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px}
+.card+.card{margin-top:16px}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute);margin:0 0 12px;font-weight:600}
+.step{margin-bottom:16px}
+.step>label,.lbl{display:block;font-weight:600;margin-bottom:6px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{flex:1 1 auto;min-width:110px;border:1px solid var(--line);background:#fff;border-radius:7px;padding:8px 10px;font:inherit;cursor:pointer;color:var(--ink);text-align:left}
+.seg button small{display:block;color:var(--mute);font-size:11.5px}
+.seg button.on{border-color:var(--accent);background:var(--accent-weak);box-shadow:inset 0 0 0 1px var(--accent)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field label{display:block;font-size:12.5px;color:var(--mute);margin-bottom:4px}
+input[type=number],select{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:7px;font:inherit;background:#fff}
+input[type=number]:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.chk{display:flex;gap:8px;align-items:flex-start;margin:6px 0;cursor:pointer}
+.chk input{margin-top:3px}
+.hint{font-size:12px;color:var(--mute);margin-top:4px}
+details{border:1px solid var(--line);border-radius:7px;padding:8px 10px;margin-top:8px;background:#fafbfc}
+details summary{cursor:pointer;font-weight:500;font-size:13px}
+details ul{margin:8px 0 0;padding-left:18px;font-size:12.5px;color:#334}
+.hidden{display:none!important}
+.result{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.badge{min-width:120px;height:120px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700}
+.badge .big{font-size:44px;line-height:1}
+.badge .sm{font-size:12px;font-weight:600;margin-top:6px;text-transform:uppercase;letter-spacing:.04em}
+.b-out{background:var(--c-out);color:#555}.b-sep{background:var(--c-sep);color:var(--csepi)}
+.b-1{background:var(--c1);color:var(--c1i)}.b-2{background:var(--c2);color:var(--c2i)}.b-3{background:var(--c3);color:var(--c3i)}.b-4{background:var(--c4);color:var(--c4i)}
+.restext{flex:1;min-width:240px}
+.restext h3{margin:0 0 4px;font-size:18px}
+.restext .ref{color:var(--mute);font-size:13px}
+.notes{margin:12px 0 0;padding:0;list-style:none}
+.notes li{padding:8px 10px;border-left:3px solid var(--accent);background:var(--accent-weak);border-radius:0 6px 6px 0;margin-bottom:6px;font-size:13px}
+.notes li.warn{border-color:#c77700;background:#fff4e0}
+.mods{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.mod{border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.mod b{display:block;font-size:14px}
+.mod span{font-size:12.5px;color:var(--mute)}
+.mod .nb{display:inline-block;margin-top:6px;font-size:11px;padding:2px 7px;border-radius:10px;background:#eef1f5;color:#445}
+.mod .nb.y{background:#fde7e4;color:#8f1d14}
+#chartWrap{position:relative}
+canvas{width:100%;height:auto;display:block;border-radius:6px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:12px;color:var(--mute)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:5px}
+.tablehead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.tablehead .ref{font-size:12.5px;color:var(--mute)}
+.comp{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.comp select{flex:1}
+.btn{border:1px solid var(--line);background:#fff;border-radius:7px;padding:6px 10px;font:inherit;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+footer{max-width:1280px;margin:0 auto;padding:0 20px 30px;color:var(--mute);font-size:12px}
+.summary{font-family:ui-monospace,Consolas,monospace;font-size:12px;background:#f6f8fa;border:1px solid var(--line);border-radius:6px;padding:10px;white-space:pre-wrap;margin-top:10px}
+#mbar{display:none}
+@media(max-width:960px){
+  #mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:10;align-items:center;gap:12px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:#0f2a47;color:#fff;box-shadow:0 -4px 14px rgba(0,0,0,.18);cursor:pointer}
+  #mbar .mb{min-width:58px;text-align:center;font-weight:700;font-size:20px;border-radius:8px;padding:4px 8px}
+  #mbar .mt{flex:1;font-size:13px;line-height:1.3}
+  #mbar .go{font-size:12px;color:#b9c8d8}
+  body{padding-bottom:80px}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Direttiva PED 2014/68/UE · Calcolatore di categoria e moduli</h1>
+  <p>Classificazione secondo art. 4, art. 13 e Allegato II (tabelle 1–9) · procedure di valutazione della conformità dell'Allegato III</p>
+</header>
+
+<main>
+<!-- ===================== INPUT ===================== -->
+<section>
+  <div class="card">
+    <h2>1 · Tipo di attrezzatura</h2>
+    <div class="seg" id="type">
+      <button data-v="vessel" class="on">Recipiente<small>art. 4.1 a)</small></button>
+      <button data-v="fired">A focolare / riscaldato<small>art. 4.1 b) – Tab. 5</small></button>
+      <button data-v="piping">Tubazione<small>art. 4.1 c)</small></button>
+      <button data-v="safety">Accessorio di sicurezza<small>art. 2.4</small></button>
+      <button data-v="pressacc">Accessorio a pressione<small>art. 2.5</small></button>
+      <button data-v="assembly">Insieme<small>art. 4.2</small></button>
+    </div>
+  </div>
+
+  <!-- Fluid & data -->
+  <div class="card" id="cardFluid">
+    <h2>2 · Fluido</h2>
+    <div class="step" id="stState">
+      <label>Stato del fluido</label>
+      <div class="seg" id="state">
+        <button data-v="gas" class="on">Gas / vapore<small>o liquido con Pv &gt; 0,5 bar a TS</small></button>
+        <button data-v="liq">Liquido<small>Pv ≤ 0,5 bar a TS</small></button>
+      </div>
+      <div class="hint">Pv = tensione di vapore alla temperatura massima ammissibile TS, rispetto alla pressione atmosferica (1013 mbar).</div>
+    </div>
+    <div class="step">
+      <label>Gruppo del fluido (art. 13)</label>
+      <div class="seg" id="group">
+        <button data-v="1" class="on">Gruppo 1<small>pericolosi</small></button>
+        <button data-v="2">Gruppo 2<small>tutti gli altri</small></button>
+      </div>
+      <details>
+        <summary>Quali fluidi sono del Gruppo 1? (Reg. CE 1272/2008 – CLP)</summary>
+        <ul>
+          <li>Esplosivi instabili o divisioni 1.1–1.5</li>
+          <li>Gas infiammabili cat. 1 e 2; gas comburenti cat. 1</li>
+          <li>Liquidi infiammabili cat. 1 e 2; cat. 3 se TS &gt; punto di infiammabilità</li>
+          <li>Solidi infiammabili cat. 1 e 2</li>
+          <li>Sostanze/miscele autoreattive tipi A–F; perossidi organici tipi A–F</li>
+          <li>Liquidi e solidi piroforici cat. 1</li>
+          <li>Sostanze che a contatto con l'acqua liberano gas infiammabili cat. 1, 2, 3</li>
+          <li>Liquidi e solidi comburenti cat. 1, 2, 3</li>
+          <li>Tossicità acuta orale e cutanea cat. 1 e 2; per inalazione cat. 1, 2, 3</li>
+          <li>STOT esposizione singola cat. 1</li>
+          <li><b>Inoltre:</b> qualsiasi fluido con TS superiore al suo punto di infiammabilità</li>
+        </ul>
+        <div class="hint">Recipiente a più scomparti: si classifica con lo scomparto di categoria più alta; scomparto con più fluidi: si usa il fluido più severo (art. 13.2).</div>
+      </details>
+    </div>
+  </div>
+
+  <div class="card" id="cardData">
+    <h2>3 · Dati di progetto</h2>
+    <div class="row">
+      <div class="field"><label for="ps">PS – pressione max ammissibile (bar g)</label><input type="number" id="ps" value="10" min="0" step="any"></div>
+      <div class="field" id="fV"><label for="v">V – volume (L)</label><input type="number" id="v" value="100" min="0" step="any"></div>
+      <div class="field" id="fDN"><label for="dn">DN – dimensione nominale</label><input type="number" id="dn" value="50" min="0" step="any"></div>
+    </div>
+    <div id="paccMode" class="step hidden" style="margin-top:12px">
+      <label>Per l'accessorio a pressione è significativo…</label>
+      <div class="seg" id="pmode">
+        <button data-v="v" class="on">Volume V<small>tabelle recipienti</small></button>
+        <button data-v="dn">DN<small>tabelle tubazioni</small></button>
+        <button data-v="both">Entrambi<small>si prende la cat. più alta</small></button>
+      </div>
+    </div>
+
+    <div id="special" style="margin-top:12px">
+      <span class="lbl">Casi particolari</span>
+      <label class="chk" id="xUnstable"><input type="checkbox" id="unstable"> Gas instabile <span class="hint">(cat. I/II → III; tab. 1 e 6)</span></label>
+      <label class="chk" id="xExt"><input type="checkbox" id="ext"> Estintore portatile o bombola per apparecchi respiratori <span class="hint">(almeno cat. III; tab. 2)</span></label>
+      <label class="chk" id="xT350"><input type="checkbox" id="t350"> Temperatura del fluido &gt; 350 °C <span class="hint">(cat. II → III; tab. 7)</span></label>
+      <label class="chk" id="xCooker"><input type="checkbox" id="cooker"> Pentola a pressione <span class="hint">(controllo progettazione con modulo di cat. III; tab. 5)</span></label>
+      <label class="chk" id="xHotw"><input type="checkbox" id="hotw"> Insieme per produzione di acqua calda (art. 4.2, 2° comma) <span class="hint">(tab. 4)</span></label>
+      <div class="hint" id="noSpecial">Nessun caso particolare per questa combinazione.</div>
+    </div>
+  </div>
+
+  <!-- Safety accessory -->
+  <div class="card hidden" id="cardSafety">
+    <h2>2 · Accessorio di sicurezza</h2>
+    <label class="chk"><input type="checkbox" id="specific"> Fabbricato per un'attrezzatura specifica</label>
+    <div id="protWrap" class="field hidden" style="margin-top:8px">
+      <label for="prot">Categoria dell'attrezzatura protetta</label>
+      <select id="prot"><option value="1">I</option><option value="2">II</option><option value="3">III</option><option value="4" selected>IV</option></select>
+      <div class="hint">Puoi calcolarla selezionando prima il tipo dell'attrezzatura protetta.</div>
+    </div>
+    <div class="hint" style="margin-top:8px">Valvole di sicurezza, dischi di rottura, barre di schiacciamento, CSPRS, pressostati/termostati/livellostati di sicurezza, SRMCR (art. 2.4).</div>
+  </div>
+
+  <!-- Assembly -->
+  <div class="card hidden" id="cardAssembly">
+    <h2>2 · Componenti dell'insieme</h2>
+    <div class="hint" style="margin-bottom:8px">Inserisci la categoria di ciascuna attrezzatura a pressione che compone l'insieme (escludi gli accessori di sicurezza). Usa il calcolatore per classificarle una per una.</div>
+    <div id="comps"></div>
+    <button class="btn" id="addComp">+ Aggiungi componente</button>
+  </div>
+
+  <div class="card">
+    <h2>Esclusioni (art. 1.2)</h2>
+    <details>
+      <summary>Verifica che l'attrezzatura non sia esclusa dalla PED</summary>
+      <ul>
+        <li>a) condotte di trasporto da/verso un impianto (dall'ultimo organo di isolamento)</li>
+        <li>b) reti di distribuzione/raccolta acqua; condotte forzate idroelettriche</li>
+        <li>c) recipienti semplici a pressione (dir. 2014/29/UE)</li>
+        <li>d) aerosol (dir. 75/324/CEE)</li>
+        <li>e) attrezzature per il funzionamento di veicoli (2007/46/CE, 167/2013, 168/2013)</li>
+        <li>f) max cat. I e coperte da Macchine, Ascensori, Bassa Tensione, Dispositivi medici, Apparecchi a gas, ATEX</li>
+        <li>g) art. 346 TFUE (difesa); h) usi nucleari con rischio radioattivo</li>
+        <li>i) controllo pozzi (petrolio, gas, geotermia, stoccaggio sotterraneo)</li>
+        <li>j) alloggiamenti di motori, turbine, compressori, pompe, attuatori in cui la pressione non è fattore significativo</li>
+        <li>k) altiforni e apparecchiature siderurgiche/fonderia connesse</li>
+        <li>l) alloggiamenti per apparecchiature AT; m) alloggiamenti di cavi</li>
+        <li>n) navi, razzi, aeromobili, unità offshore mobili e attrezzature a bordo</li>
+        <li>o) involucri leggeri (pneumatici, cuscini d'aria, palloni, gommoni)</li>
+        <li>p) silenziatori di scarico e di aspirazione; q) bottiglie/lattine per bevande gassate</li>
+        <li>r) recipienti per bevande con PS·V ≤ 500 bar·L e PS ≤ 7 bar</li>
+        <li>s) attrezzature ADR/RID/ADN (2008/68/CE), TPED (2010/35/UE), IMDG, ICAO</li>
+        <li>t) termosifoni e tubi di impianti di riscaldamento ad acqua calda</li>
+        <li>u) recipienti per liquidi con pressione del gas sovrastante ≤ 0,5 bar</li>
+      </ul>
+    </details>
+  </div>
+</section>
+
+<!-- ===================== OUTPUT ===================== -->
+<section>
+  <div class="card">
+    <h2>Risultato</h2>
+    <div class="result">
+      <div class="badge" id="badge"><div class="big" id="bBig">–</div><div class="sm" id="bSm"></div></div>
+      <div class="restext">
+        <h3 id="rTitle"></h3>
+        <div class="ref" id="rRef"></div>
+        <div class="ref" id="rCalc" style="margin-top:4px"></div>
+      </div>
+    </div>
+    <ul class="notes" id="notes"></ul>
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+      <button class="btn" id="copyBtn">Copia riepilogo</button>
+      <span id="copyMsg" class="hint"></span>
+    </div>
+    <div class="summary hidden" id="summaryBox"></div>
+  </div>
+
+  <div class="card" id="chartCard">
+    <div class="tablehead"><h2 id="chartTitle">Tabella</h2><span class="ref" id="chartRef"></span></div>
+    <div id="chartWrap"><canvas id="chart" width="1400" height="900"></canvas></div>
+    <div class="legend">
+      <span><i style="background:var(--c-out)"></i>Fuori PED (PS ≤ 0,5 bar)</span>
+      <span><i style="background:var(--c-sep)"></i>Art. 4.3 – SEP</span>
+      <span><i style="background:var(--c1)"></i>Cat. I</span>
+      <span><i style="background:var(--c2)"></i>Cat. II</span>
+      <span><i style="background:var(--c3)"></i>Cat. III</span>
+      <span><i style="background:var(--c4)"></i>Cat. IV</span>
+      <span>● punto di progetto · linee = limite superiore della categoria</span>
+    </div>
+    <div class="hint" id="chart2note"></div>
+  </div>
+
+  <div class="card">
+    <h2>Moduli di valutazione della conformità ammessi</h2>
+    <div class="mods" id="mods"></div>
+    <div class="hint" style="margin-top:10px">Il fabbricante può sempre scegliere una procedura prevista per una categoria superiore (art. 14). Moduli con intervento dell'organismo notificato evidenziati in rosso.</div>
+  </div>
+</section>
+</main>
+<div id="mbar"><div class="mb" id="mbB">–</div><div class="mt" id="mbT"></div><div class="go">Risultato ↓</div></div>
+<footer>
+  Strumento di supporto basato sul testo consolidato della Direttiva 2014/68/UE (versione IT 17.07.2014). I limiti delle tabelle sono applicati come "limite superiore" della categoria (All. II, punto 4). Non sostituisce la valutazione del fabbricante o dell'organismo notificato.
+</footer>
+
+<script>
+/* ============ Classification logic (Allegato II) ============
+   Return codes: -1 fuori PED, 0 = art. 4.3 SEP, 1..4 = categorie I..IV */
+const T = {
+  1:{name:'Tabella 1',ref:'Recipienti – gas, gruppo 1 · art. 4.1 a) i) 1° trattino',axis:'V',
+     f:(ps,v)=>{ if(ps<=0.5) return -1;
+       if(v<=1){ if(ps<=200) return 0; if(ps<=1000) return 3; return 4; }
+       const p=ps*v; if(p<=25) return 0; if(p<=50) return 1; if(p<=200) return 2; if(p<=1000) return 3; return 4; }},
+  2:{name:'Tabella 2',ref:'Recipienti – gas, gruppo 2 · art. 4.1 a) i) 2° trattino',axis:'V',
+     f:(ps,v)=>{ if(ps<=0.5) return -1;
+       if(v<=1){ if(ps<=1000) return 0; if(ps<=3000) return 3; return 4; }
+       const p=ps*v; if(p<=50) return 0; if(p<=200) return 1; if(p<=1000) return 2; if(p<=3000 || ps<=4) return 3; return 4; }},
+  3:{name:'Tabella 3',ref:'Recipienti – liquidi, gruppo 1 · art. 4.1 a) ii) 1° trattino',axis:'V',
+     f:(ps,v)=>{ if(ps<=0.5) return -1;
+       if(v<=1){ return ps<=500 ? 0 : 2; }
+       if(ps>500) return 3; if(ps*v<=200) return 0; return ps>10 ? 2 : 1; }},
+  4:{name:'Tabella 4',ref:'Recipienti – liquidi, gruppo 2 · art. 4.1 a) ii) 2° trattino',axis:'V',
+     f:(ps,v)=>{ if(ps<=0.5) return -1;
+       if(v<=10){ return ps<=1000 ? 0 : 1; }
+       if(ps<=10 || ps*v<=10000) return 0; return ps>500 ? 2 : 1; }},
+  5:{name:'Tabella 5',ref:'Attrezzature a focolare o altro riscaldamento · art. 4.1 b)',axis:'V',
+     f:(ps,v)=>{ if(ps<=0.5) return -1; if(v<=2) return 0;
+       const p=ps*v; if(ps>32 || v>1000 || p>3000) return 4; if(p<=50) return 1; if(p<=200) return 2; return 3; }},
+  6:{name:'Tabella 6',ref:'Tubazioni – gas, gruppo 1 · art. 4.1 c) i) 1° trattino',axis:'DN',
+     f:(ps,dn)=>{ if(ps<=0.5) return -1; if(dn<=25) return 0; const p=ps*dn;
+       if(dn<=100) return p<=1000 ? 1 : 2;
+       if(dn<=350) return p<=3500 ? 2 : 3; return 3; }},
+  7:{name:'Tabella 7',ref:'Tubazioni – gas, gruppo 2 · art. 4.1 c) i) 2° trattino',axis:'DN',
+     f:(ps,dn)=>{ if(ps<=0.5) return -1; const p=ps*dn; if(dn<=32 || p<=1000) return 0;
+       if(dn<=100) return 1;
+       if(dn<=250) return p<=3500 ? 1 : 2;
+       if(p<=3500) return 1; if(p<=5000) return 2; return 3; }},
+  8:{name:'Tabella 8',ref:'Tubazioni – liquidi, gruppo 1 · art. 4.1 c) ii) 1° trattino',axis:'DN',
+     f:(ps,dn)=>{ if(ps<=0.5) return -1; if(dn<=25 || ps*dn<=2000) return 0;
+       if(ps>500) return 3; return ps>10 ? 2 : 1; }},
+  9:{name:'Tabella 9',ref:'Tubazioni – liquidi, gruppo 2 · art. 4.1 c) ii) 2° trattino',axis:'DN',
+     f:(ps,dn)=>{ if(ps<=0.5) return -1; if(ps<=10 || dn<=200 || ps*dn<=5000) return 0;
+       return ps>500 ? 2 : 1; }},
+};
+const ROM=['SEP','I','II','III','IV'];
+
+const MODS = {
+  'A':  ['Controllo interno della produzione', false],
+  'A2': ['Controllo interno della produzione + controlli ufficiali delle attrezzature a intervalli casuali', true],
+  'D1': ['Garanzia della qualità del processo di produzione', true],
+  'E1': ["Garanzia della qualità dell'ispezione e della prova delle attrezzature finite", true],
+  'B(prog)+D': ['Esame UE del tipo (tipo di progetto) + garanzia qualità del processo di produzione', true],
+  'B(prog)+F': ['Esame UE del tipo (tipo di progetto) + verifica delle attrezzature', true],
+  'B(prod)+E': ['Esame UE del tipo (tipo di produzione) + garanzia qualità delle attrezzature', true],
+  'B(prod)+C2':['Esame UE del tipo (tipo di produzione) + controllo interno con prove sotto controllo ufficiale a intervalli casuali', true],
+  'H':  ['Garanzia totale di qualità', true],
+  'B(prod)+D': ['Esame UE del tipo (tipo di produzione) + garanzia qualità del processo di produzione', true],
+  'B(prod)+F': ['Esame UE del tipo (tipo di produzione) + verifica delle attrezzature', true],
+  'G':  ["Verifica dell'unità", true],
+  'H1': ['Garanzia totale di qualità con controllo della progettazione', true],
+};
+const CATMODS = {1:['A'],2:['A2','D1','E1'],3:['B(prog)+D','B(prog)+F','B(prod)+E','B(prod)+C2','H'],4:['B(prod)+D','B(prod)+F','G','H1']};
+function modLabel(k){return k.replace('+',' + ').replace('(prog)',' (tipo di progetto)').replace('(prod)',' (tipo di produzione)');}
+
+/* ============ State ============ */
+const S={type:'vessel',state:'gas',group:'1',pmode:'v'};
+const $=id=>document.getElementById(id);
+function seg(id,key){
+  $(id).querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+    $(id).querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');S[key]=b.dataset.v;update();
+  }));
+}
+seg('type','type');seg('state','state');seg('group','group');seg('pmode','pmode');
+['ps','v','dn','unstable','ext','t350','cooker','hotw','specific','prot'].forEach(id=>$(id).addEventListener('input',update));
+$('specific').addEventListener('change',update);
+
+/* assembly components */
+function addComp(val){
+  const d=document.createElement('div');d.className='comp';
+  d.innerHTML=`<select>${['SEP (art. 4.3)','I','II','III','IV'].map((t,i)=>`<option value="${i}" ${i==val?'selected':''}>${t}</option>`).join('')}</select><button class="btn" title="Rimuovi">✕</button>`;
+  d.querySelector('select').addEventListener('input',update);
+  d.querySelector('button').addEventListener('click',()=>{d.remove();update();});
+  $('comps').appendChild(d);
+}
+$('addComp').addEventListener('click',()=>{addComp(1);update();});
+addComp(2);addComp(1);
+
+/* ============ Table selection ============ */
+function vesselTable(){ if(S.state==='gas') return S.group==='1'?1:2; return S.group==='1'?3:4; }
+function pipeTable(){ if(S.state==='gas') return S.group==='1'?6:7; return S.group==='1'?8:9; }
+
+function applyExceptions(t,c,notes){
+  const ps=+$('ps').value;
+  if((t===1||t===6) && $('unstable').checked && (c===1||c===2)){ notes.push(['Gas instabile: categoria '+ROM[c]+' elevata a III (eccezione '+T[t].name+').']); c=3; }
+  if(t===2 && $('ext').checked && c<3 && ps>0.5){ notes.push(['Estintore portatile / bombola per apparecchi respiratori: classificato almeno in categoria III (eccezione Tabella 2).']); c=3; }
+  if(t===7 && $('t350').checked && c===2){ notes.push(['Fluido a temperatura > 350 °C: categoria II elevata a III (eccezione Tabella 7).']); c=3; }
+  return c;
+}
+
+/* ============ Main update ============ */
+let chartSpec=null;
+function update(){
+  const ty=S.type;
+  const ps=+$('ps').value||0, v=+$('v').value||0, dn=+$('dn').value||0;
+  const isEq=['vessel','fired','piping','pressacc'].includes(ty);
+  $('cardFluid').classList.toggle('hidden',!isEq||ty==='fired');
+  $('cardData').classList.toggle('hidden',!isEq);
+  $('cardSafety').classList.toggle('hidden',ty!=='safety');
+  $('cardAssembly').classList.toggle('hidden',ty!=='assembly');
+    $('paccMode').classList.toggle('hidden',ty!=='pressacc');
+  $('protWrap').classList.toggle('hidden',!$('specific').checked);
+
+  const useV = ty==='vessel'||ty==='fired'||(ty==='pressacc'&&S.pmode!=='dn');
+  const useDN= ty==='piping'||(ty==='pressacc'&&S.pmode!=='v');
+  $('fV').classList.toggle('hidden',!useV);
+  $('fDN').classList.toggle('hidden',!useDN);
+
+  // special-case visibility
+  const vt=vesselTable(), pt=pipeTable();
+  const show={
+    xUnstable: (useV&&ty!=='fired'&&vt===1)||(useDN&&pt===6),
+    xExt: useV&&ty!=='fired'&&vt===2,
+    xT350: useDN&&pt===7,
+    xCooker: ty==='fired',
+    xHotw: useV&&ty!=='fired'&&vt===4,
+  };
+  let any=false;for(const k in show){$(k).classList.toggle('hidden',!show[k]);any=any||show[k];}
+  $('noSpecial').classList.toggle('hidden',any);
+
+  let cat=null,title='',ref='',calc='',notes=[],tables=[];
+
+  if(isEq){
+    if(ty==='fired'){
+      tables.push(5);
+    } else {
+      if(useV) tables.push(vt);
+      if(useDN) tables.push(pt);
+    }
+    const res=tables.map(t=>{const x=T[t].axis==='V'?v:dn; let c=T[t].f(ps,x); c=c<0?c:applyExceptions(t,c,notes); return {t,c};});
+    cat=Math.max(...res.map(r=>r.c));
+    if(res.length>1){ notes.push(['Accessorio a pressione: classificato con '+res.map(r=>T[r.t].name+' → '+(r.c<0?'fuori PED':ROM[r.c])).join(' e ')+'; si applica la categoria più elevata (All. II, punto 3).']); }
+    ref=res.map(r=>T[r.t].name+' – '+T[r.t].ref).join(' | ');
+    const parts=[`PS = ${fmt(ps)} bar`];
+    if(useV){parts.push(`V = ${fmt(v)} L`,`PS·V = ${fmt(ps*v)} bar·L`);}
+    if(useDN){parts.push(`DN = ${fmt(dn)}`,`PS·DN = ${fmt(ps*dn)} bar`);}
+    calc=parts.join(' · ');
+    if(ty==='fired'){
+      notes.push(['Rientrano in art. 4.1 b) le attrezzature con rischio di surriscaldamento per generazione di vapore o acqua surriscaldata a T > 110 °C. Se T ≤ 110 °C classificare come recipiente.','warn']);
+      if($('cooker').checked){ notes.push(['Pentola a pressione: controllo della progettazione con almeno uno dei moduli della categoria III (eccezione Tabella 5).']); if(cat>=0&&cat<3){ notes.push(['La categoria di tabella resta '+ROM[cat]+', ma la progettazione va verificata con un modulo di cat. III.']); } }
+    }
+    if(show.xHotw && $('hotw').checked){ notes.push(['Insieme per produzione di acqua calda: esame UE del tipo (Modulo B – tipo di progetto) per i RES 2.10, 2.11, 3.4, 5 a) e d) dell\'All. I, oppure Modulo H (eccezione Tabella 4).']); }
+    if(ty==='piping') notes.push(['Gli scambiatori di calore a tubi per raffreddamento/riscaldamento d\'aria sono parificati alle tubazioni (art. 2.3).']);
+    chartSpec={tables:res.map(r=>r.t),ps,v,dn};
+  }
+  else if(ty==='safety'){
+    if($('specific').checked){ cat=+$('prot').value; notes.push(['Accessorio fabbricato per un\'attrezzatura specifica: può essere classificato nella stessa categoria dell\'attrezzatura protetta (All. II, punto 2).']); ref='Allegato II, punto 2 – eccezione'; }
+    else { cat=4; ref='Allegato II, punto 2 – accessori di sicurezza sempre in categoria IV'; }
+    calc='';
+    chartSpec=null;
+  }
+  else if(ty==='assembly'){
+    const vals=[...$('comps').querySelectorAll('select')].map(s=>+s.value);
+    cat=vals.length?Math.max(...vals):0;
+    ref='Art. 4.2 e All. I punto 1.1 / Art. 14.6 – valutazione globale di conformità';
+    calc=vals.length+' componenti inseriti';
+    notes.push(['La categoria dell\'insieme è determinata dalla categoria più elevata delle attrezzature che lo compongono, esclusi gli accessori di sicurezza (art. 14.6 b).']);
+    notes.push(['La valutazione globale comprende: a) valutazione di ogni attrezzatura a pressione non già marcata CE; b) valutazione dell\'integrazione dei componenti (All. I, punti 2.3, 2.8, 2.9); c) valutazione della protezione dell\'insieme contro il superamento dei limiti ammissibili (All. I, punti 2.10 e 3.2.3), alla categoria più elevata delle attrezzature protette.']);
+    notes.push(['Insiemi di art. 4.2: generatori di vapore/acqua surriscaldata (T > 110 °C) con almeno un\'attrezzatura riscaldata soggetta a PED; insiemi con almeno un\'attrezzatura di art. 4.1. Gli insiemi sotto i limiti seguono l\'art. 4.3 (SEP).','warn']);
+    chartSpec=null;
+  }
+
+  // Badge & text
+  const b=$('badge');b.className='badge '+(cat<0?'b-out':cat===0?'b-sep':'b-'+cat);
+  if(cat<0){ $('bBig').textContent='—'; $('bSm').textContent='Fuori PED'; title='Direttiva PED non applicabile'; notes.unshift(['PS ≤ 0,5 bar: l\'attrezzatura non rientra nel campo di applicazione (art. 1.1).']); }
+  else if(cat===0){ $('bBig').textContent='SEP'; $('bSm').textContent='Art. 4.3'; title='Corretta prassi costruttiva (SEP)';
+    notes.unshift(['Progettazione e fabbricazione secondo una corretta prassi costruttiva in uno Stato membro, con istruzioni per l\'uso e identificazione del fabbricante. Nessuna marcatura CE e nessuna dichiarazione UE di conformità (art. 4.3).']); }
+  else { $('bBig').textContent=ROM[cat]; $('bSm').textContent='Categoria'; title='Categoria '+ROM[cat]+' – marcatura CE richiesta'; }
+  $('rTitle').textContent=title; $('rRef').textContent=ref; $('rCalc').textContent=calc;
+  $('notes').innerHTML=notes.map(n=>`<li class="${n[1]||''}">${n[0]}</li>`).join('');
+
+  const mb=$('mbB');mb.textContent=$('bBig').textContent;mb.className='mb '+b.className.replace('badge','').trim();$('mbT').textContent=title;
+  // Modules
+  const mods=$('mods');
+  if(cat>=1){
+    mods.innerHTML=CATMODS[cat].map(k=>`<div class="mod"><b>Modulo ${modLabel(k)}</b><span>${MODS[k][0]}</span><br><span class="nb ${MODS[k][1]?'y':''}">${MODS[k][1]?'Organismo notificato':'Senza organismo notificato'}</span></div>`).join('');
+  } else if(cat===0){ mods.innerHTML='<div class="mod"><b>Nessun modulo</b><span>Art. 4.3 – corretta prassi costruttiva. Non va apposta la marcatura CE.</span></div>'; }
+  else mods.innerHTML='<div class="mod"><b>—</b><span>Fuori dal campo di applicazione della direttiva.</span></div>';
+
+  // summary
+  const typeName={vessel:'Recipiente',fired:'Attrezzatura a focolare/riscaldata',piping:'Tubazione',safety:'Accessorio di sicurezza',pressacc:'Accessorio a pressione',assembly:'Insieme'}[ty];
+  let sum=`PED 2014/68/UE – classificazione\nTipo: ${typeName}\n`;
+  if(isEq){ if(ty!=='fired') sum+=`Stato fluido: ${S.state==='gas'?'gas/vapore (Pv > 0,5 bar)':'liquido (Pv ≤ 0,5 bar)'}\nGruppo fluido: ${S.group}\n`; sum+=`${calc}\n`; }
+  sum+=`Riferimento: ${ref}\nRisultato: ${cat<0?'fuori PED':cat===0?'Art. 4.3 (SEP)':'Categoria '+ROM[cat]}\n`;
+  if(cat>=1) sum+=`Moduli ammessi: ${CATMODS[cat].map(modLabel).join('; ')}\n`;
+  if(notes.length) sum+='Note:\n'+notes.map(n=>'- '+n[0]).join('\n');
+  $('summaryBox').textContent=sum;
+
+  drawChart();
+}
+function fmt(x){return (Math.round(x*1000)/1000).toLocaleString('it-IT');}
+
+/* ============ Chart (raster regions from the same logic) ============ */
+const COL={'-1':'#eceff3',0:'#d9eef0',1:'#cfe8c4',2:'#fbe6a6',3:'#f8c08c',4:'#ee8f86'};
+const INK={'-1':'#666',0:'#16626b',1:'#2f6b1d',2:'#7a5b00',3:'#8a4206',4:'#8f1d14'};
+function drawChart(){
+  const card=$('chartCard');
+  if(!chartSpec){card.classList.add('hidden');return;}
+  card.classList.remove('hidden');
+  const tabs=chartSpec.tables;
+  const t=tabs[0];
+  $('chartTitle').textContent=T[t].name; $('chartRef').textContent=T[t].ref;
+  $('chart2note').textContent=tabs.length>1?('Grafico mostrato: '+T[t].name+'. La classificazione considera anche '+tabs.slice(1).map(x=>T[x].name).join(', ')+' (vedi risultato).'):'';
+  const cv=$('chart'),ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height,L=120,R=40,TP=40,B=100;
+  const pw=W-L-R,ph=H-TP-B;
+  const isV=T[t].axis==='V';
+  const xmin=isV?0.1:1, xmax=isV?100000:20000, ymin=0.1, ymax=20000;
+  const lx=Math.log10(xmin),lX=Math.log10(xmax),ly=Math.log10(ymin),lY=Math.log10(ymax);
+  const X=x=>L+(Math.log10(x)-lx)/(lX-lx)*pw, Y=y=>TP+ph-(Math.log10(y)-ly)/(lY-ly)*ph;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+  // exceptions to show on chart
+  const fn=(ps,x)=>{let c=T[t].f(ps,x); if(c<0) return c; const n=[]; return applyExceptions(t,c,n);};
+  // regions
+  const step=3; const grid=[];
+  for(let py=0;py<ph;py+=step){
+    const row=[];
+    for(let px=0;px<pw;px+=step){
+      const x=Math.pow(10,lx+(px+step/2)/pw*(lX-lx)), y=Math.pow(10,ly+(ph-py-step/2)/ph*(lY-ly));
+      const c=fn(y,x);row.push(c);ctx.fillStyle=COL[c];ctx.fillRect(L+px,TP+py,step,step);
+    }
+    grid.push(row);
+  }
+  // boundaries: draw where category changes
+  ctx.fillStyle='#22313f';
+  for(let i=0;i<grid.length;i++)for(let j=0;j<grid[i].length;j++){
+    const c=grid[i][j];
+    if(j+1<grid[i].length&&grid[i][j+1]!==c) ctx.fillRect(L+(j+1)*step-1,TP+i*step,2,step);
+    if(i+1<grid.length&&grid[i+1][j]!==c) ctx.fillRect(L+j*step,TP+(i+1)*step-1,step,2);
+  }
+  // region labels: centroid of each category
+  const acc={};
+  for(let i=0;i<grid.length;i++)for(let j=0;j<grid[i].length;j++){const c=grid[i][j];(acc[c]=acc[c]||{x:0,y:0,n:0});acc[c].x+=j;acc[c].y+=i;acc[c].n++;}
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  for(const c in acc){ if(acc[c].n<40) continue;
+    // pick the cell of this category closest to centroid
+    const cx=acc[c].x/acc[c].n,cy=acc[c].y/acc[c].n;let best=null,bd=1e9;
+    for(let i=0;i<grid.length;i++)for(let j=0;j<grid[i].length;j++) if(grid[i][j]==c){
+      // prefer interior cells
+      const inner=(grid[i-6]?.[j]==c)&&(grid[i+6]?.[j]==c)&&(grid[i]?.[j-14]==c)&&(grid[i]?.[j+14]==c);
+      const d=(i-cy)**2+(j-cx)**2+(inner?0:1e6); if(d<bd){bd=d;best=[i,j];}
+    }
+    const lab=c==-1?'Fuori PED':c==0?'Art. 4.3 (SEP)':'Cat. '+ROM[c];
+    ctx.font='600 30px Inter,sans-serif';ctx.fillStyle=INK[c];
+    ctx.fillText(lab,L+best[1]*step,TP+best[0]*step);
+  }
+  // axes
+  ctx.strokeStyle='#22313f';ctx.lineWidth=2;ctx.strokeRect(L,TP,pw,ph);
+  ctx.font='22px Inter,sans-serif';ctx.fillStyle='#334';
+  const xt=isV?[0.1,1,10,100,1000,10000,100000]:[1,10,100,1000,10000];
+  const yt=[0.1,0.5,1,10,100,1000,10000];
+  ctx.textAlign='center';ctx.textBaseline='top';
+  xt.forEach(x=>{ctx.fillRect(X(x)-1,TP+ph,2,10);ctx.fillText(x.toLocaleString('it-IT'),X(x),TP+ph+16);});
+  ctx.textAlign='right';ctx.textBaseline='middle';
+  yt.forEach(y=>{ctx.fillRect(L-10,Y(y)-1,10,2);ctx.fillText(y.toLocaleString('it-IT'),L-16,Y(y));});
+  ctx.font='600 24px Inter,sans-serif';ctx.textAlign='center';
+  ctx.fillText(isV?'V (L)':'DN',L+pw/2,H-36);
+  ctx.save();ctx.translate(34,TP+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText('PS (bar)',0,0);ctx.restore();
+  // point
+  const px=isV?chartSpec.v:chartSpec.dn, py=chartSpec.ps;
+  if(px>0&&py>0){
+    const cx=Math.min(Math.max(X(px),L),L+pw), cy=Math.min(Math.max(Y(py),TP),TP+ph);
+    ctx.setLineDash([8,8]);ctx.strokeStyle='#0b5cad';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(cx,TP+ph);ctx.lineTo(cx,cy);ctx.lineTo(L,cy);ctx.stroke();ctx.setLineDash([]);
+    ctx.beginPath();ctx.arc(cx,cy,12,0,Math.PI*2);ctx.fillStyle='#0b5cad';ctx.fill();ctx.lineWidth=4;ctx.strokeStyle='#fff';ctx.stroke();
+  }
+}
+
+$('mbar').addEventListener('click',()=>$('badge').scrollIntoView({behavior:'smooth',block:'start'}));
+/* copy */
+$('copyBtn').addEventListener('click',async()=>{
+  const txt=$('summaryBox').textContent;
+  try{await navigator.clipboard.writeText(txt);$('copyMsg').textContent='Riepilogo copiato.';$('summaryBox').classList.add('hidden');}
+  catch(e){$('summaryBox').classList.remove('hidden');$('copyMsg').textContent='Copia non disponibile: seleziona il testo qui sotto.';}
+});
+update();
+</script>
+<script>if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "Calcolatore PED 2014/68/UE",
+  "short_name": "Calcolatore PED",
+  "description": "Categoria e moduli secondo la Direttiva PED 2014/68/UE",
+  "lang": "it",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f6f9",
+  "theme_color": "#0f2a47",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}
